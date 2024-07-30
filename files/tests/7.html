@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<title>ТЕСТ</title>
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+    <style>
+	#tb1 {
+	margin-left:calc(50% - 20px);
+}
+#tab1:checked ~ #content1 {
+  display: block;
+}
+
+ /* Стили для радиокнопок */
+ .answer {
+ display: inline-block;
+ margin: 10px;
+ padding: 10px;
+ border: 1px solid #ccc;
+ }
+
+.correct {
+ background-color: #2ecc71;
+ color: white;
+ border-color: #2ecc71;
+ }
+
+.incorrect {
+ background-color: #F38277;
+ color: white;
+ border-color: #F38277;
+ }
+
+.normal {
+ background-color: white;
+ }
+
+</style>
+</head>
+<body>
+<main>
+<div>
+    
+		<h1 style="margin-top: 40px;">Как называется столица нашей Родины?</h1>
+        <div class="underline"></div>
+        <div>
+            <img src="./media/7.jpg"  alt="Нет изображения" width="520" height="320" style="display: block; margin-left: auto; margin-right: auto; margin-top: 30px; margin-bottom: 20px;">
+        </div>
+		<div class="buttons">
+			<div class="btn1">
+				<label class="gray">
+					<input type="radio" name="answer1" id="answer1-1" value="1">
+					A. Новосибирск     
+					</label>
+			</div>	
+			<div class="btn1">
+				<label class="gray">
+					<input type="radio" name="answer1" id="answer1-2" value="2">
+					Б. Москва          
+					</label>
+			</div>	
+			<div class="btn1">
+				<label class="gray">
+					<input type="radio" name="answer1" id="answer1-3" value="3">
+					В. Кемерово
+					</label>
+			</div>		
+		</div>
+		
+
+	</div>
+    </section>   
+</div>
+</main>
+<script src="js\jquery-1.12.0.min.js"></script>
+<script>
+ var ca = '2';
+ const answers = document.querySelectorAll('input[type="radio"]');
+ answers.forEach(function(answer) {
+ answer.addEventListener('click', function() {
+ if (answer.checked) 
+ {
+	if (answer.value === ca) 
+		{
+		answer.closest('label').classList.add('correct');
+		answer.closest('label').textContent += ' ✔';
+		
+		var rbuttons = document.getElementsByName("answer1");
+		for (var i = 0; i < rbuttons.length; i++) 
+		{
+			rbuttons[i].disabled = true;
+		}
+		} 
+	else 
+		{
+		answer.closest('label').classList.add('incorrect');
+		answer.closest('label').textContent += ' ✖';
+		}
+}
+else 
+	{
+	answer.closest('label').classList.remove('correct');
+	answer.closest('label').classList.remove('incorrect');
+	answer.closest('label').classList.remove('normal');
+	answer.closest('label').textContent = '';
+	}
+ });
+ });
+
+</script>
+</body>
+</html>
