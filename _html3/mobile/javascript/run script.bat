@@ -1,1 +1,0 @@
-start node updateText.js
