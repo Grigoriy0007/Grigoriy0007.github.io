@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестовое задание</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #ffffff;
+        }
+        .test-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .progress-bar {
+            display: flex;
+            margin-bottom: 30px;
+            position: relative;
+            height: 30px;
+            align-items: center;
+        }
+        .progress-line {
+            position: absolute;
+            height: 3px;
+            background-color: #ecf0f1;
+            width: 100%;
+            z-index: 1;
+        }
+        .progress-fill {
+            position: absolute;
+            height: 3px;
+            background-color: #3498db;
+            z-index: 2;
+            transition: width 0.3s;
+        }
+        .progress-step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #ecf0f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            position: relative;
+            z-index: 3;
+            font-weight: bold;
+            color: #7f8c8d;
+        }
+        .progress-step.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .question-container {
+            margin-bottom: 30px;
+            display: none;
+        }
+        .question-container.active {
+            display: block;
+        }
+        .question-text {
+            font-size: 18px;
+            font-weight: normal;
+            margin-bottom: 14px;
+        }
+        .additional-text {
+            font-style: italic;
+            margin-bottom: 15px;
+            color: #7f8c8d;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-left: 3px solid #3498db;
+        }
+        .answer-option {
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .answer-option:hover {
+            background-color: #f8f9fa;
+        }
+        .answer-option.selected {
+            background-color: #d4edff;
+            border-color: #3498db;
+        }
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .results-container {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .results-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        .score {
+            font-size: 36px;
+            font-weight: bold;
+            color: #3498db;
+            margin: 20px 0;
+        }
+        .restart-btn {
+            margin-top: 20px;
+        }
+        .test-content {
+            transition: opacity 0.3s;
+        }
+        .test-content.hidden {
+            opacity: 0;
+            pointer-events: none;
+            height: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-content" id="testContent">
+        <h1 class="test-title" id="testTitle">Название теста</h1>
+        
+        <div class="progress-bar">
+            <div class="progress-line"></div>
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div id="questionsContainer"></div>
+        
+        <div class="navigation-buttons">
+            <button id="prevBtn" disabled>Предыдущий</button>
+            <button id="nextBtn">Следующий</button>
+            <button id="finishBtn" style="display: none;">Завершить</button>
+        </div>
+    </div>
+    
+    <div class="results-container" id="resultsContainer">
+        <h2 class="results-title">Результаты теста</h2>
+        <div>Вы ответили правильно на</div>
+        <div class="score" id="score">0</div>
+        <div>вопросов из <span id="totalQuestions"></span></div>
+        <button class="restart-btn" id="restartBtn">Пройти тест снова</button>
+    </div>
+
+    <script>
+        // ШАБЛОН ДЛЯ ДОБАВЛЕНИЯ НОВЫХ ВОПРОСОВ
+        // {
+        //     text: "Текст вопроса",
+        //     additionalText: "Дополнительный текст (опционально)",
+        //     correctAnswer: 1, // Индекс правильного ответа (0 - первый, 1 - второй и т.д.)
+        //     answers: [
+        //         "Ответ 1",
+        //         "Ответ 2",
+        //         "Ответ 3"
+        //     ]
+        // },
+
+        // Данные теста
+        const testData = {
+            title: "Тестирование алагӯвналӣ",
+            questions: [
+                {
+                    text: "Авадыду предложениеду многозначнай турэ̄н мō значениеду «дрова, полено»:",
+                    additionalText: "",
+                    correctAnswer: 1,
+                    answers: [
+                        "Тынивэ амӣнми агӣдук дюлави мōлва эмэвчэн, тымӣнин тарилвар хӯлдяӈат.",
+                        "Сӣ умун кумнэе мōя ӣвкэл, тоговор иладят.",
+                        "Бӣ тарва мōва элэкэс ичэм: э̄ма гудеин."
+                    ]
+                },
+                {
+                    text: "Эрду синонимическайду рядту ошибкава бакакаллу:",
+                    additionalText: "",
+                    correctAnswer: 1,
+                    answers: [
+                        "нонон, билир, учэлэ~утэлэ",
+                        "хулукун, хуюкун, ниткун, хэгдыкэн, киракан",
+                        "алагӯвми, ōранмӣ, татыгатмӣ, таткатмӣ"
+                    ]
+                },
+                {
+                    text: "Э̄маду предложениеду фразеологизм:",
+                    additionalText: "",
+                    correctAnswer: 0,
+                    answers: [
+                        "Сӣ эсалви бэгичэ бисинни. ",
+                        "Сӣ эсалви мулāкāл, экэл хактыралӣ таӈна.",
+                        "Э̄да эсаллӣ хуларгачал?"
+                    ]
+                },
+                {
+                    text: "Эр уивчэ, эвдеӈэ пэсиргэрэ сочетание",
+                    additionalText: "",
+                    correctAnswer: 1,
+                    answers: [
+                        "чутумалӣ урэлӣ",
+                        "кусинэ ювэмӈу",
+                        "агӣлӣ нулгӣдерэ"
+                    ]
+                },
+                {
+                    text: "Авады суффикс бэе бэркэт ōдяриван ичэвкэнерэн?",
+                    additionalText: "",
+                    correctAnswer: 1,
+                    answers: [
+                        "дукумнӣ",
+                        "давлāлэн",
+                        "амӣрāн"
+                    ]
+                },
+                {
+                    text: "Турэ̄н <em>урикӣт</em> турэ̄ндук ōвӯвчā:",
+                    additionalText: "",
+                    correctAnswer: 0,
+                    answers: [
+                        "урин",
+                        "ури",
+                        "ур"
+                    ]
+                },
+                {
+                    text: "Предложениеду распределительнайва числительнайва бакакаллу:",
+                    additionalText: "",
+                    correctAnswer: 1,
+                    answers: [
+                        "Илара нуӈандун гӯнчэв.",
+                        "Илаталди колобови боридави.",
+                        "Илӣдук омолгидук ханӈӯктадави."
+                    ]
+                },
+                {
+                    text: "Глаголва эрду значениеду «совет, пожелание, предложение совершить действие» бакакаллу:",
+                    additionalText: "",
+                    correctAnswer: 2,
+                    answers: [
+                        "Экэл эсӣ сурурэ, митпэ алāткэл.",
+                        "Нуӈан мунтыки эмэӈнэ̄н, бӣ алāтчэӈэ̄в.",
+                        "Гē асаткāн нян дукугин."
+                    ]
+                },
+                {
+                    text: "Гӯкэллу, э̄маду предложениеду послелог.",
+                    additionalText: "",
+                    correctAnswer: 1,
+                    answers: [
+                        "Оёлӣ дылкэн дэгӣлдерэн.",
+                        "Урэл оёлӣтын туксул ичэвуллэ.",
+                        "Бӣ книгавас оёло нэ̄чэв."
+                    ]
+                },
+                {
+                    text: "Э̄кӯн эр предложениеду коӈномот дукувча турэ̄н: «Соӈочо-соӈочо, <em>тадук</em> āсинча»? ",
+                    additionalText: "",
+                    correctAnswer: 1,
+                    answers: [
+                        "наречие",
+                        "союз",
+                        "послелог"
+                    ]
+                },
+                {
+                    text: "Эрду предложениеду грамматическайва основаван бакакаллу: «Бира дагадун сагды бэе мунэвэ арчалдыран».",
+                    additionalText: "",
+                    correctAnswer: 1,
+                    answers: [
+                        "мунэвэ арчалдыран",
+                        "бэе арчалдыран",
+                        "бира дагадун арчалдыран"
+                    ]
+                },
+                {
+                    text: "Эр предложение: «Амакāнунми бидеӈкӣв»:",
+                    additionalText: "",
+                    correctAnswer: 0,
+                    answers: [
+                        "умуконосоставнай определённо-личнай",
+                        "умуконосоставнай безличнай",
+                        "умуконосоставнай назывной"
+                    ]
+                },
+                {
+                    text: "Умун сōткунун членнун предложениева бакакаллу:",
+                    additionalText: "",
+                    correctAnswer: 1,
+                    answers: [
+                        "Атыркан дюлави ӣрэн.",
+                        "Тар ая, ōкин-да урундерӣ бэе.",
+                        "Болонӣду эдыр эдылиллэ."
+                    ]
+                },
+                {
+                    text: "Простойва предложениева умунтэгир членилнун химнэ̄кэллу:",
+                    additionalText: "",
+                    correctAnswer: 0,
+                    answers: [
+                        "Нэмкур багдамал чалбакар, гугдал дырамил дягдамиял, силгӣндерӣл эдындук сēктал, хулар-да дяпкаӈаду умунупчэл.",
+                        "Хокторондулӣ гиркудяна, иртэ̄риндулӣ ичэтчэнэ, бӣ агланду тэвуктэл хутāлэдэра ичэдем.",
+                        "Маӈнан амардун хунадин хуктывдечэн, Параска гудейду оронду тэгэтчэчэн."
+                    ]
+                },
+                {
+                    text: "Эр предложение: «Сиӈилгэн одячан багдатмарӣт, гиллэмэрӣт-тэ ōдячан, тарит э̄салва балӣдявкӣ бичэ̄н»?",
+                    additionalText: "",
+                    correctAnswer: 1,
+                    answers: [
+                        "сложноподчинённай, придаточнай временноилнун",
+                        "сложноподчинённай, придаточнай следствиенун",
+                        "сложноподчинённай, придаточнай условнайнун"
+                    ]
+                }
+                
+                // Добавьте здесь новые вопросы по тому же шаблону
+            ]
+        };
+
+        // Инициализация теста
+        document.addEventListener('DOMContentLoaded', function() {
+            const testContent = document.getElementById('testContent');
+            const testTitle = document.getElementById('testTitle');
+            const questionsContainer = document.getElementById('questionsContainer');
+            const progressBar = document.querySelector('.progress-bar');
+            const progressFill = document.getElementById('progressFill');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const finishBtn = document.getElementById('finishBtn');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const scoreElement = document.getElementById('score');
+            const totalQuestionsElement = document.getElementById('totalQuestions');
+            const restartBtn = document.getElementById('restartBtn');
+
+            let currentQuestion = 0;
+            let userAnswers = Array(testData.questions.length).fill(null);
+            let testCompleted = false;
+
+            // Устанавливаем название теста
+            testTitle.textContent = testData.title;
+
+            // Создаем шаги прогресс-бара
+            testData.questions.forEach((_, index) => {
+                const step = document.createElement('div');
+                step.className = 'progress-step';
+                if (index === 0) step.classList.add('active');
+                step.textContent = index + 1;
+                progressBar.appendChild(step);
+            });
+
+            // Создаем контейнеры для вопросов
+            testData.questions.forEach((question, index) => {
+                const questionElement = document.createElement('div');
+                questionElement.className = 'question-container';
+                if (index === 0) questionElement.classList.add('active');
+                questionElement.dataset.questionIndex = index;
+
+                questionElement.innerHTML = `
+                    <div class="question-text">${index + 1}. ${question.text}</div>
+                    ${question.additionalText ? `<div class="additional-text">${question.additionalText}</div>` : ''}
+                    <div class="answers-container">
+                        ${question.answers.map((answer, i) => `
+                            <div class="answer-option" data-answer-index="${i}">
+                                ${String.fromCharCode(1072 + i)}) ${answer}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                questionsContainer.appendChild(questionElement);
+            });
+
+            // Обновляем прогресс-бар
+            function updateProgressBar() {
+                const progressSteps = document.querySelectorAll('.progress-step');
+                progressSteps.forEach((step, index) => {
+                    step.classList.toggle('active', index === currentQuestion);
+                });
+
+                const fillPercentage = (currentQuestion / (testData.questions.length - 1)) * 100;
+                progressFill.style.width = `${fillPercentage}%`;
+
+                // Обновляем состояние кнопок
+                prevBtn.disabled = currentQuestion === 0;
+                nextBtn.style.display = currentQuestion === testData.questions.length - 1 ? 'none' : 'block';
+                finishBtn.style.display = currentQuestion === testData.questions.length - 1 ? 'block' : 'none';
+            }
+
+            // Показываем текущий вопрос
+            function showQuestion(index) {
+                document.querySelectorAll('.question-container').forEach(container => {
+                    container.classList.remove('active');
+                });
+                document.querySelector(`.question-container[data-question-index="${index}"]`).classList.add('active');
+
+                // Восстанавливаем выбранный ответ, если он есть
+                if (userAnswers[index] !== null) {
+                    const answerOptions = document.querySelectorAll(`.question-container[data-question-index="${index}"] .answer-option`);
+                    answerOptions.forEach(option => {
+                        option.classList.toggle('selected', parseInt(option.dataset.answerIndex) === userAnswers[index]);
+                    });
+                }
+
+                updateProgressBar();
+            }
+
+            // Обработчик выбора ответа
+            questionsContainer.addEventListener('click', function(e) {
+                if (testCompleted) return;
+                
+                const answerOption = e.target.closest('.answer-option');
+                if (!answerOption) return;
+
+                const questionContainer = answerOption.closest('.question-container');
+                const questionIndex = parseInt(questionContainer.dataset.questionIndex);
+                const answerIndex = parseInt(answerOption.dataset.answerIndex);
+
+                // Снимаем выделение со всех вариантов в этом вопросе
+                questionContainer.querySelectorAll('.answer-option').forEach(option => {
+                    option.classList.remove('selected');
+                });
+
+                // Выделяем выбранный вариант
+                answerOption.classList.add('selected');
+
+                // Сохраняем ответ
+                userAnswers[questionIndex] = answerIndex;
+            });
+
+            // Кнопка "Предыдущий"
+            prevBtn.addEventListener('click', function() {
+                if (currentQuestion > 0 && !testCompleted) {
+                    currentQuestion--;
+                    showQuestion(currentQuestion);
+                }
+            });
+
+            // Кнопка "Следующий"
+            nextBtn.addEventListener('click', function() {
+                if (currentQuestion < testData.questions.length - 1 && !testCompleted) {
+                    currentQuestion++;
+                    showQuestion(currentQuestion);
+                }
+            });
+
+            // Кнопка "Завершить"
+            finishBtn.addEventListener('click', function() {
+                if (testCompleted) return;
+
+                // Подсчитываем правильные ответы
+                const correctAnswers = userAnswers.reduce((count, answer, index) => {
+                    return count + (answer === testData.questions[index].correctAnswer ? 1 : 0);
+                }, 0);
+                
+                const totalQuestions = testData.questions.length;
+
+                // Показываем результаты и скрываем тест
+                testContent.classList.add('hidden');
+                resultsContainer.style.display = 'block';
+                
+                // Отображаем результаты
+                scoreElement.textContent = correctAnswers;
+                totalQuestionsElement.textContent = totalQuestions;
+                testCompleted = true;
+
+                // Прокручиваем к результатам
+                resultsContainer.scrollIntoView({ behavior: 'smooth' });
+            });
+
+            // Кнопка "Пройти тест снова"
+            restartBtn.addEventListener('click', function() {
+                // Сбрасываем тест
+                currentQuestion = 0;
+                userAnswers = Array(testData.questions.length).fill(null);
+                testCompleted = false;
+
+                // Сбрасываем выделение ответов
+                document.querySelectorAll('.answer-option').forEach(option => {
+                    option.classList.remove('selected');
+                });
+
+                // Показываем тест и скрываем результаты
+                testContent.classList.remove('hidden');
+                resultsContainer.style.display = 'none';
+
+                // Показываем первый вопрос
+                showQuestion(0);
+
+                // Прокручиваем к началу теста
+                testContent.scrollIntoView({ behavior: 'smooth' });
+            });
+
+            // Инициализируем первый вопрос
+            showQuestion(0);
+        });
+    </script>
+</body>
+</html>
